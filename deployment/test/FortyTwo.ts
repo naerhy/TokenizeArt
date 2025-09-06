@@ -1,11 +1,29 @@
 import { network } from "hardhat";
-import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { suite, test } from "node:test";
 
-describe("FortyTwo", async () => {
+suite("FortyTwo", async () => {
   const { viem } = await network.connect();
-  const publicClient = await viem.getPublicClient();
+  const [wallet] = await viem.getWalletClients();
+  const fortyTwo = await viem.deployContract("FortyTwo", undefined, {
+    client: {
+      wallet
+    }
+  });
 
-  it("", async () => {
-    const fortyTwo = await viem.deployContract("FortTwo");
+  test("By default addresses should not be authorized", async () => {
+    const [address] = await wallet.getAddresses();
+    assert.equal(await fortyTwo.read.isAuthorized([address]), false);
+  });
+
+  test("Address should be authorized after modifying status", async () => {
+    const [address] = await wallet.getAddresses();
+    await fortyTwo.write.setAuthorizationStatus([address, true]);
+    assert.equal(await fortyTwo.read.isAuthorized([address]), true);
+  });
+
+  test("Mint a NFT", async () => {
+    // TODO
+    // await fortyTwo.write.mintNFT([""]);
   });
 });
